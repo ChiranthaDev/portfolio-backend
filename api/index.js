@@ -1,6 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const connectDB = require("../config/db");
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 
@@ -20,7 +24,11 @@ app.get("/api", (req, res) => {
     });
 });
 
-// We will add MongoDB connection and other routes here later
+// API Routes
+app.use("/api/projects", require("../routes/projects"));
+app.use("/api/blogs", require("../routes/blogs"));
+app.use("/api/videos", require("../routes/videos"));
+app.use("/api/upload", require("../routes/upload"));
 
 // Export for Vercel Serverless Functions
 module.exports = app;
