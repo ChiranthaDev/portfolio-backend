@@ -19,7 +19,6 @@ const upload = multer({
     storage: multerS3({
         s3: s3,
         bucket: process.env.R2_BUCKET_NAME || "chiraa-portfolio",
-        acl: "public-read",
         contentType: multerS3.AUTO_CONTENT_TYPE,
         key: function (req, file, cb) {
             const uniqueName = Date.now().toString() + "-" + file.originalname.replace(/\s+/g, '-');

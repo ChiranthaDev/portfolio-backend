@@ -7,7 +7,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-    origin: ["http://localhost:3000", "https://your-portfolio.vercel.app"], // Update with real Vercel URL later
+    origin: true, // Allow all origins — restrict later if needed
     credentials: true,
 }));
 
