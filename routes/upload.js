@@ -29,26 +29,33 @@ const upload = multer({
 });
 
 // POST /api/upload
-router.post("/", upload.single("image"), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: "No file uploaded" });
+router.post("/", (req, res) => {
+    upload.single("image")(req, res, function (err) {
+        if (err) {
+            console.error("Multer upload error:", err);
+            return res.status(500).json({ error: "File upload failed", details: err.message, stack: err.stack });
         }
 
-        // R2 doesn't always return the public location directly nicely if custom domains are used
-        // So we might construct the public URL from process.env.R2_PUBLIC_URL if provided
-        const publicUrl = process.env.R2_PUBLIC_URL
-            ? `${process.env.R2_PUBLIC_URL}/${req.file.key}`
-            : req.file.location;
+        try {
+            if (!req.file) {
+                return res.status(400).json({ error: "No file uploaded" });
+            }
 
-        res.json({
-            message: "File uploaded successfully",
-            url: publicUrl,
-            key: req.file.key
-        });
-    } catch (err) {
-        res.status(500).json({ error: "File upload failed", details: err.message });
-    }
+            const publicUrl = process.env.R2_PUBLIC_URL
+                ? `${process.env.R2_PUBLIC_URL}/${req.file.key}`
+                : req.file.location;
+
+            res.json({
+                message: "File uploaded successfully",
+                url: publicUrl,
+                key: req.file.key
+            });
+        } catch (innerErr) {
+            console.error("File processing error:", innerErr);
+            res.status(500).json({ error: "File processing failed", details: innerErr.message });
+        }
+    });
 });
+
 
 module.exports = router;
