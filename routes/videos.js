@@ -23,8 +23,8 @@ router.get("/", async (req, res) => {
 
         res.json(result);
     } catch (err) {
-        console.error("GET /videos error:", err.message);
-        res.status(500).json({ error: "Failed to fetch videos" });
+        console.error("GET /videos error:", err);
+        res.status(500).json({ error: "Failed to fetch videos", details: err.message, stack: err.stack });
     }
 });
 

@@ -24,8 +24,8 @@ router.get("/", async (req, res) => {
 
         res.json(result);
     } catch (err) {
-        console.error("GET /blogs error:", err.message);
-        res.status(500).json({ error: "Failed to fetch blogs" });
+        console.error("GET /blogs error:", err);
+        res.status(500).json({ error: "Failed to fetch blogs", details: err.message, stack: err.stack });
     }
 });
 
