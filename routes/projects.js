@@ -1,30 +1,30 @@
 const express = require("express");
 const router = express.Router();
-const supabase = require("../utils/supabase");
+const { eq } = require("drizzle-orm");
+const db = require("../db");
+const { projects } = require("../db/schema");
 
 // GET all projects
 router.get("/", async (req, res) => {
     try {
-        const { data, error } = await supabase
-            .from("projects")
-            .select("*")
-            .order("created_at", { ascending: false });
+        const data = await db
+            .select()
+            .from(projects)
+            .orderBy(projects.createdAt);
 
-        if (error) throw error;
-
-        // Map snake_case DB columns to camelCase for the frontend
-        const projects = data.map(p => ({
+        // Map to camelCase for frontend
+        const result = data.map(p => ({
             id: p.id,
             title: p.title,
             type: p.type,
             role: p.role,
             link: p.link,
-            coverImage: p.cover_image,
-            additionalImages: p.additional_images || [],
-            date: p.created_at,
+            coverImage: p.coverImage,
+            additionalImages: p.additionalImages || [],
+            date: p.createdAt,
         }));
 
-        res.json(projects);
+        res.json(result);
     } catch (err) {
         console.error("GET /projects error:", err.message);
         res.status(500).json({ error: "Failed to fetch projects" });
@@ -36,30 +36,27 @@ router.post("/", async (req, res) => {
     try {
         const { title, type, role, link, coverImage, additionalImages } = req.body;
 
-        const { data, error } = await supabase
-            .from("projects")
-            .insert([{
+        const [newProject] = await db
+            .insert(projects)
+            .values({
                 title,
                 type,
                 role,
                 link,
-                cover_image: coverImage,
-                additional_images: additionalImages || [],
-            }])
-            .select()
-            .single();
-
-        if (error) throw error;
+                coverImage,
+                additionalImages: additionalImages || [],
+            })
+            .returning();
 
         res.status(201).json({
-            id: data.id,
-            title: data.title,
-            type: data.type,
-            role: data.role,
-            link: data.link,
-            coverImage: data.cover_image,
-            additionalImages: data.additional_images || [],
-            date: data.created_at,
+            id: newProject.id,
+            title: newProject.title,
+            type: newProject.type,
+            role: newProject.role,
+            link: newProject.link,
+            coverImage: newProject.coverImage,
+            additionalImages: newProject.additionalImages || [],
+            date: newProject.createdAt,
         });
     } catch (err) {
         console.error("POST /projects error:", err.message);
@@ -70,13 +67,7 @@ router.post("/", async (req, res) => {
 // DELETE a project
 router.delete("/:id", async (req, res) => {
     try {
-        const { error } = await supabase
-            .from("projects")
-            .delete()
-            .eq("id", req.params.id);
-
-        if (error) throw error;
-
+        await db.delete(projects).where(eq(projects.id, req.params.id));
         res.json({ message: "Project deleted successfully" });
     } catch (err) {
         console.error("DELETE /projects error:", err.message);

@@ -1,28 +1,28 @@
 const express = require("express");
 const router = express.Router();
-const supabase = require("../utils/supabase");
+const { eq } = require("drizzle-orm");
+const db = require("../db");
+const { blogs } = require("../db/schema");
 
 // GET all blogs
 router.get("/", async (req, res) => {
     try {
-        const { data, error } = await supabase
-            .from("blogs")
-            .select("*")
-            .order("created_at", { ascending: false });
+        const data = await db
+            .select()
+            .from(blogs)
+            .orderBy(blogs.createdAt);
 
-        if (error) throw error;
-
-        const blogs = data.map(b => ({
+        const result = data.map(b => ({
             id: b.id,
             title: b.title,
             category: b.category,
-            linkedinLink: b.linkedin_link,
-            coverImage: b.cover_image,
+            linkedinLink: b.linkedinLink,
+            coverImage: b.coverImage,
             status: b.status,
-            date: b.created_at,
+            date: b.createdAt,
         }));
 
-        res.json(blogs);
+        res.json(result);
     } catch (err) {
         console.error("GET /blogs error:", err.message);
         res.status(500).json({ error: "Failed to fetch blogs" });
@@ -34,28 +34,25 @@ router.post("/", async (req, res) => {
     try {
         const { title, category, linkedinLink, coverImage, status } = req.body;
 
-        const { data, error } = await supabase
-            .from("blogs")
-            .insert([{
+        const [newBlog] = await db
+            .insert(blogs)
+            .values({
                 title,
                 category,
-                linkedin_link: linkedinLink,
-                cover_image: coverImage,
+                linkedinLink,
+                coverImage,
                 status: status || "Published",
-            }])
-            .select()
-            .single();
-
-        if (error) throw error;
+            })
+            .returning();
 
         res.status(201).json({
-            id: data.id,
-            title: data.title,
-            category: data.category,
-            linkedinLink: data.linkedin_link,
-            coverImage: data.cover_image,
-            status: data.status,
-            date: data.created_at,
+            id: newBlog.id,
+            title: newBlog.title,
+            category: newBlog.category,
+            linkedinLink: newBlog.linkedinLink,
+            coverImage: newBlog.coverImage,
+            status: newBlog.status,
+            date: newBlog.createdAt,
         });
     } catch (err) {
         console.error("POST /blogs error:", err.message);
@@ -66,13 +63,7 @@ router.post("/", async (req, res) => {
 // DELETE a blog
 router.delete("/:id", async (req, res) => {
     try {
-        const { error } = await supabase
-            .from("blogs")
-            .delete()
-            .eq("id", req.params.id);
-
-        if (error) throw error;
-
+        await db.delete(blogs).where(eq(blogs.id, req.params.id));
         res.json({ message: "Blog deleted successfully" });
     } catch (err) {
         console.error("DELETE /blogs error:", err.message);
