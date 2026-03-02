@@ -18,8 +18,12 @@ router.get("/", async (req, res) => {
             title: p.title,
             type: p.type,
             role: p.role,
+            year: p.year,
+            category: p.category,
+            description: p.description,
             link: p.link,
             coverImage: p.coverImage,
+            mainImage: p.mainImage,
             additionalImages: p.additionalImages || [],
             date: p.createdAt,
         }));
@@ -34,7 +38,7 @@ router.get("/", async (req, res) => {
 // POST a new project
 router.post("/", async (req, res) => {
     try {
-        const { title, type, role, link, coverImage, additionalImages } = req.body;
+        const { title, type, role, year, category, description, link, coverImage, mainImage, additionalImages } = req.body;
 
         const [newProject] = await db
             .insert(projects)
@@ -42,8 +46,12 @@ router.post("/", async (req, res) => {
                 title,
                 type,
                 role,
+                year,
+                category,
+                description,
                 link,
                 coverImage,
+                mainImage,
                 additionalImages: additionalImages || [],
             })
             .returning();
@@ -53,8 +61,12 @@ router.post("/", async (req, res) => {
             title: newProject.title,
             type: newProject.type,
             role: newProject.role,
+            year: newProject.year,
+            category: newProject.category,
+            description: newProject.description,
             link: newProject.link,
             coverImage: newProject.coverImage,
+            mainImage: newProject.mainImage,
             additionalImages: newProject.additionalImages || [],
             date: newProject.createdAt,
         });

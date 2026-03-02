@@ -5,8 +5,12 @@ const projects = pgTable("projects", {
     title: text("title").notNull(),
     type: text("type"),
     role: text("role"),
+    year: text("year"),
+    category: text("category"),
+    description: text("description"),
     link: text("link"),
     coverImage: text("cover_image"),
+    mainImage: text("main_image"),
     additionalImages: text("additional_images").array(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
