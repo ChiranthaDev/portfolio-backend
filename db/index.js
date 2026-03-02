@@ -6,9 +6,11 @@ if (!process.env.DATABASE_URL) {
     console.warn("⚠️  Missing DATABASE_URL environment variable.");
 }
 
-// Use connection pooling-friendly settings for Vercel serverless
+// Serverless-optimized settings for Supabase + Vercel
 const client = postgres(process.env.DATABASE_URL, {
-    prepare: false, // Required for Supabase transaction pooler
+    prepare: false,      // Required for Supabase PgBouncer transaction pooler
+    ssl: "require",      // Required for Supabase connections
+    max: 1,              // Limit connections in serverless environment
 });
 
 const db = drizzle(client, { schema });
