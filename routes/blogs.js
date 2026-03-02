@@ -1,16 +1,30 @@
 const express = require("express");
 const router = express.Router();
-const { getTable, saveTable, generateId } = require("../utils/r2db");
-
-const TABLE_NAME = "blogs";
+const supabase = require("../utils/supabase");
 
 // GET all blogs
 router.get("/", async (req, res) => {
     try {
-        const blogs = await getTable(TABLE_NAME);
-        blogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        const { data, error } = await supabase
+            .from("blogs")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const blogs = data.map(b => ({
+            id: b.id,
+            title: b.title,
+            category: b.category,
+            linkedinLink: b.linkedin_link,
+            coverImage: b.cover_image,
+            status: b.status,
+            date: b.created_at,
+        }));
+
         res.json(blogs);
     } catch (err) {
+        console.error("GET /blogs error:", err.message);
         res.status(500).json({ error: "Failed to fetch blogs" });
     }
 });
@@ -18,21 +32,33 @@ router.get("/", async (req, res) => {
 // POST a new blog
 router.post("/", async (req, res) => {
     try {
-        const blogs = await getTable(TABLE_NAME);
+        const { title, category, linkedinLink, coverImage, status } = req.body;
 
-        const newBlog = {
-            id: generateId(),
-            ...req.body,
-            views: "0",
-            status: "Published",
-            date: new Date().toISOString()
-        };
+        const { data, error } = await supabase
+            .from("blogs")
+            .insert([{
+                title,
+                category,
+                linkedin_link: linkedinLink,
+                cover_image: coverImage,
+                status: status || "Published",
+            }])
+            .select()
+            .single();
 
-        blogs.push(newBlog);
-        await saveTable(TABLE_NAME, blogs);
+        if (error) throw error;
 
-        res.status(201).json(newBlog);
+        res.status(201).json({
+            id: data.id,
+            title: data.title,
+            category: data.category,
+            linkedinLink: data.linkedin_link,
+            coverImage: data.cover_image,
+            status: data.status,
+            date: data.created_at,
+        });
     } catch (err) {
+        console.error("POST /blogs error:", err.message);
         res.status(400).json({ error: "Failed to create blog", details: err.message });
     }
 });
@@ -40,12 +66,16 @@ router.post("/", async (req, res) => {
 // DELETE a blog
 router.delete("/:id", async (req, res) => {
     try {
-        const blogs = await getTable(TABLE_NAME);
-        const filteredBlogs = blogs.filter(b => b.id !== req.params.id);
+        const { error } = await supabase
+            .from("blogs")
+            .delete()
+            .eq("id", req.params.id);
 
-        await saveTable(TABLE_NAME, filteredBlogs);
+        if (error) throw error;
+
         res.json({ message: "Blog deleted successfully" });
     } catch (err) {
+        console.error("DELETE /blogs error:", err.message);
         res.status(500).json({ error: "Failed to delete blog" });
     }
 });
