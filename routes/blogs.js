@@ -15,7 +15,6 @@ router.get("/", async (req, res) => {
         const result = data.map(b => ({
             id: b.id,
             title: b.title,
-            category: b.category,
             linkedinLink: b.linkedinLink,
             coverImage: b.coverImage,
             status: b.status,
@@ -32,13 +31,12 @@ router.get("/", async (req, res) => {
 // POST a new blog
 router.post("/", async (req, res) => {
     try {
-        const { title, category, linkedinLink, coverImage, status } = req.body;
+        const { title, linkedinLink, coverImage, status } = req.body;
 
         const [newBlog] = await db
             .insert(blogs)
             .values({
                 title,
-                category,
                 linkedinLink,
                 coverImage,
                 status: status || "Published",
@@ -48,7 +46,6 @@ router.post("/", async (req, res) => {
         res.status(201).json({
             id: newBlog.id,
             title: newBlog.title,
-            category: newBlog.category,
             linkedinLink: newBlog.linkedinLink,
             coverImage: newBlog.coverImage,
             status: newBlog.status,

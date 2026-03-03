@@ -18,7 +18,6 @@ const projects = pgTable("projects", {
 const blogs = pgTable("blogs", {
     id: uuid("id").defaultRandom().primaryKey(),
     title: text("title").notNull(),
-    category: text("category"),
     linkedinLink: text("linkedin_link"),
     coverImage: text("cover_image"),
     status: text("status").default("Published"),
